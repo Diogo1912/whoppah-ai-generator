@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Whoppah Description Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container mt-5 custom-container">
+    <!-- ✅ Logo -->
+    <div class="text-center mb-3">
+        <img src="{{ url_for('static', filename='whoppah-logo.png') }}" alt="Whoppah Logo" style="max-height: 60px;">
+    </div>
+
+    <!-- Page title -->
+    <h1 class="text-center mb-4">🪑 Whoppah AI generator</h1>
+
+    <form method="POST" enctype="multipart/form-data" id="descriptionForm">
+        <div class="mb-3">
+            <input type="text" class="form-control" name="title" placeholder="Enter item title" value="{{ title }}" required>
+        </div>
+        <div class="mb-3">
+            <input type="file" class="form-control" name="images" accept="image/*" multiple required>
+        </div>
+        <div class="mb-3">
+            <textarea class="form-control" name="custom_prompt" rows="4" placeholder="Enter a custom prompt to guide GPT..." required>{{ custom_prompt }}</textarea>
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn btn-success custom-btn">Generate Description</button>
+        </div>
+    </form>
+
+    <!-- ✅ Spinner (initially hidden) -->
+    <div id="loadingSpinner" class="text-center mt-4" style="display: none;">
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Generating description...</p>
+    </div>
+
+    {% if ai_result.description %}
+    <div class="row mt-5 g-4">
+        <!-- Left: Title + image(s) -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-center mb-3">{{ title }}</h5>
+                    {% if image_urls|length > 1 %}
+                        <div id="imageCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for image in image_urls %}
+                                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                        <img src="{{ image }}" class="d-block w-100 img-fluid rounded" alt="Uploaded Image">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    {% else %}
+                        <img src="{{ image_urls[0] }}" alt="Uploaded Image" class="img-fluid rounded mb-3">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Description + attributes -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Seller Description</h5>
+                    <p class="mb-4">{{ ai_result.description }}</p>
+
+                    <h6 class="card-subtitle mb-3 text-muted">AI Attribute Breakdown</h6>
+                    <table class="table table-bordered table-striped">
+                        <tbody>
+                            <tr><th>Colors</th><td>{% for c in ai_result.colors %}<span class="badge bg-secondary me-1">{{ c }}</span>{% endfor %}</td></tr>
+                            <tr><th>Materials</th><td>{% for m in ai_result.materials %}<span class="badge bg-light border me-1">{{ m }}</span>{% endfor %}</td></tr>
+                            <tr><th>Category</th><td>{{ ai_result.categories }}</td></tr>
+                            <tr><th>Style</th><td>{{ ai_result.styles }}</td></tr>
+                            <tr><th>Brand</th><td>{{ ai_result.brand or '—' }}</td></tr>
+                            <tr><th>Quality</th><td>{{ ai_result.quality }}</td></tr>
+                            <tr>
+                                <th>Usage Signs</th>
+                                <td>
+                                    {% if ai_result.usageSigns %}
+                                        <ul>{% for sign in ai_result.usageSigns %}<li>{{ sign }}</li>{% endfor %}</ul>
+                                    {% else %}<span class="text-muted">None</span>{% endif %}
+                                </td>
+                            </tr>
+                            <tr><th>Usage Description</th><td>{{ ai_result.usageSignsDescription or 'None' }}</td></tr>
+                            <tr><th>Feedback</th><td>{{ ai_result.feedback }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ✅ JS to trigger spinner on submit -->
+<script>
+document.getElementById("descriptionForm").addEventListener("submit", function () {
+    document.getElementById("loadingSpinner").style.display = "block";
+
+    const submitBtn = this.querySelector("button[type='submit']");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Generating...";
+});
+</script>
+
+<!-- ✅ Footer -->
+<footer class="text-center mt-5 mb-3 text-muted small">
+    Made by Diogo Baptista. For internal use only.
+</footer>
+
+</body>
+</html>
